@@ -283,7 +283,7 @@ Example if_equiv :
     forall b S,
     equiv_axiomatica
     <{ if b then S else skip end }>
-    <{S}>.
+    <{ S }>.
 Proof. 
 
 Admitted.
