@@ -263,16 +263,6 @@ Notation "P [ X |-> a ]" := (assertion_sub X a P)
                                P custom assn, X global, a custom com)
                           : assertion_scope.
 
-(*
-Bajo esta definicion, algunos programas pueden ser equivalentes aunque desde la perspectiva del programador no lo sean
-ciertos programas sean indistinguibles para Hoare aunque no sean estructuralmente equivalentes.
-
-ejemplo, new X := 0 in skip es equivalente a   skip 
-
-bajo esta nocion, porque el estado externo no cambia
-
-*)
-
 Definition equiv_axiomatica (c1 c2 : com) : Prop :=
   forall P Q : Assertion,
     ({{ P }} c1 {{ Q }}) <<->>
