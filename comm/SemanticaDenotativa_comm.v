@@ -1,5 +1,6 @@
-From Stdlib Require Import Arith.
-From Stdlib Require Import Strings.String.
+Require Import Arith.
+Require Import Strings.String.
+Require Import Coq.Logic.FunctionalExtensionality.
 
 Definition total_map (A : Type) := string -> A.
 
@@ -94,7 +95,6 @@ match b with
 end.
 
 
-
 Inductive com : Type :=
 | CSkip
 | CAsgn (x : string) (a : aexp)
@@ -122,8 +122,7 @@ Notation "'if' x 'then' y 'else' z 'end'" :=
 (in custom com at level 89, x at level 99,
 y at level 99, z at level 99) : com_scope.
 
-(*
-Notation "'while' x 'do' y 'end'" :=
+(*Notation "'while' x 'do' y 'end'" :=
 
 (CWhile x y)
 (in custom com at level 89, x at level 99, y at level 99) : com_scope.*)
@@ -237,5 +236,23 @@ Proof.
     - reflexivity.
     - reflexivity.
 Qed. 
+
+Example equiv_local_skip :
+  forall x a,
+  equiv_denotativa
+    <{new x := a in skip }>
+    <{skip}>.
+Proof.  
+  intros x a st. 
+  simpl. 
+  unfold t_update. 
+  apply functional_extensionality.
+  intro x'.
+  destruct (String.eqb x x') eqn:H.
+  - apply String.eqb_eq in H.
+    rewrite H. 
+    reflexivity.
+  - reflexivity.
+Qed.
 
 End SemantivaDenotativa.
