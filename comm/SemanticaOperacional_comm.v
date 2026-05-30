@@ -15,13 +15,7 @@ Notation "'_' '!->' v" := (t_empty v)
 Notation "x '!->' v ';' m" := (t_update m x v)
 (at level 100, v at next level, right associativity).
 
-
 Definition state := total_map nat.
-
-Definition empty_st := (_ !-> 0).
-
-Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
-
 
 Inductive aexp : Type :=
 | ANum (n : nat)
@@ -68,9 +62,7 @@ Notation "x <> y" := (BNeq x y) (in custom com at level 70, no associativity).
 Notation "x && y" := (BAnd x y) (in custom com at level 80, left associativity).
 Notation "'~' b" := (BNot b) (in custom com at level 75, right associativity).
 
-
 Open Scope com_scope.
-
 
 Fixpoint aeval (st : state)  (a : aexp) : nat :=
 match a with
@@ -93,7 +85,9 @@ match b with
 | <{b1 && b2}> => andb (beval st b1) (beval st b2)
 end.
 
+Definition empty_st := (_ !-> 0).
 
+Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
 
 Inductive com : Type :=
 | CSkip
@@ -104,8 +98,7 @@ Inductive com : Type :=
 | CPrint (a : aexp) (*Nuevo*)
 | CNew (x : string) (a : aexp) (c : com). (*Nuevo*)
 
-
-Notation "'skip'" := CSkip (in custom com at level 0) : com_scope.
+Notation "'skip'"  := CSkip (in custom com at level 0) : com_scope.
 
 Notation "x := y" :=
 (CAsgn x y)
@@ -133,7 +126,6 @@ Reserved Notation
 st constr, st' constr at next level).
 
 (*Nuevas notaciones*)
-
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
 
@@ -172,6 +164,7 @@ st =[ while b do c end ]=> st
     st =[ new x := a in c ]=> (x !-> o ; st')
 where "st =[ c ]=> st'" := (ceval c st st').
 
+
 Module SemanticaOperacional.
 
 Definition equiv_operacional (c1 c2 : com) : Prop :=
@@ -188,12 +181,10 @@ Proof.
    inversion H. 
    subst. 
    clear H.
-   + (* E_WhileFalse *)
-     apply E_IfFalse.
+   + apply E_IfFalse.
      * assumption. 
      * apply E_Skip.
-   + (* E_WhileTrue *)
-     apply E_IfTrue. assumption.
+   + apply E_IfTrue. assumption.
      apply E_Seq with st'0.
      * assumption.
      * assumption. 
@@ -203,11 +194,11 @@ Proof.
    clear H.
    + inversion H6. subst. 
       apply E_WhileTrue with st'0.
-      * assumption. (* beval st b = true *)
-      * assumption. (* st =[ S ]=> st'0 *)
-      * assumption. (* st'0 =[ while b do S end ]=> st' *)
+      * assumption. 
+      * assumption.
+      * assumption. 
     + inversion H6. subst.
-      apply E_WhileFalse. assumption. (* beval st b = false *) 
+      apply E_WhileFalse. assumption.
 Qed.
 
 End SemanticaOperacional.

@@ -1,5 +1,5 @@
-Require Import Arith.
-Require Import Strings.String.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Strings.String.
 Require Import Coq.Logic.FunctionalExtensionality.
 
 Definition total_map (A : Type) := string -> A.
@@ -16,13 +16,7 @@ Notation "'_' '!->' v" := (t_empty v)
 Notation "x '!->' v ';' m" := (t_update m x v)
 (at level 100, v at next level, right associativity).
 
-
 Definition state := total_map nat.
-
-Definition empty_st := (_ !-> 0).
-
-Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
-
 
 Inductive aexp : Type :=
 | ANum (n : nat)
@@ -69,9 +63,7 @@ Notation "x <> y" := (BNeq x y) (in custom com at level 70, no associativity).
 Notation "x && y" := (BAnd x y) (in custom com at level 80, left associativity).
 Notation "'~' b" := (BNot b) (in custom com at level 75, right associativity).
 
-
 Open Scope com_scope.
-
 
 Fixpoint aeval (st : state)  (a : aexp) : nat :=
 match a with
@@ -94,18 +86,19 @@ match b with
 | <{b1 && b2}> => andb (beval st b1) (beval st b2)
 end.
 
+Definition empty_st := (_ !-> 0).
+
+Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
 
 Inductive com : Type :=
 | CSkip
 | CAsgn (x : string) (a : aexp)
 | CSeq (c1 c2 : com)
 | CIf (b : bexp) (c1 c2 : com)
-(*| CWhile (b : bexp) (c : com)*)
 | CPrint (a : aexp) (*Nuevo*)
 | CNew (x : string) (a : aexp) (c : com). (*Nuevo*)
 
-
-Notation "'skip'" := CSkip (in custom com at level 0) : com_scope.
+Notation "'skip'"  := CSkip (in custom com at level 0) : com_scope.
 
 Notation "x := y" :=
 (CAsgn x y)
@@ -122,18 +115,12 @@ Notation "'if' x 'then' y 'else' z 'end'" :=
 (in custom com at level 89, x at level 99,
 y at level 99, z at level 99) : com_scope.
 
-(*Notation "'while' x 'do' y 'end'" :=
-
-(CWhile x y)
-(in custom com at level 89, x at level 99, y at level 99) : com_scope.*)
-
 Reserved Notation
 "st '=[' c ']=>' st'"
 (at level 40, c custom com at level 99,
 st constr, st' constr at next level).
 
 (*Nuevas notaciones*)
-
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
 
@@ -155,14 +142,6 @@ Inductive ceval : com -> state -> state -> Prop :=
     beval st b = false ->
     st =[ c2 ]=> st' ->
     st =[ if b then c1 else c2 end]=> st'
-(*| E_WhileFalse : forall b st c,
-    beval st b = false ->
-st =[ while b do c end ]=> st
-| E_WhileTrue : forall st st' st'' b c,
-    beval st b = true ->
-    st =[ c ]=> st' ->
-    st' =[ while b do c end ]=> st'' ->
-    st =[ while b do c end ]=> st''*)
 | E_Print : forall st a, (*nuevo*)
     st =[ print a ]=> st
 | E_New : forall st st' x a c n o, (*nuevo*)
@@ -176,14 +155,14 @@ where "st =[ c ]=> st'" := (ceval c st st').
 Module SemanticaDenotativa.
 
 Fixpoint A (a : aexp) : state -> nat :=
-  fun st =>
-    match a with
-    | ANum n => n
-    | AId X => st X
-    | APlus a1 a2 => A a1 st + A a2 st
-    | AMinus a1 a2 => A a1 st - A a2 st
-    | AMult a1 a2 => A a1 st * A a2 st
-    end.
+    fun st =>
+        match a with
+        | ANum n => n
+        | AId X => st X
+        | APlus a1 a2 => A a1 st + A a2 st
+        | AMinus a1 a2 => A a1 st - A a2 st
+        | AMult a1 a2 => A a1 st * A a2 st
+        end.
 
 Fixpoint B (b : bexp) : state -> bool :=
     fun st =>

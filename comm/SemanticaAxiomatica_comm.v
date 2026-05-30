@@ -15,7 +15,6 @@ Notation "'_' '!->' v" := (t_empty v)
 Notation "x '!->' v ';' m" := (t_update m x v)
 (at level 100, v at next level, right associativity).
 
-
 Definition state := total_map nat.
 
 Inductive aexp : Type :=
@@ -63,9 +62,7 @@ Notation "x <> y" := (BNeq x y) (in custom com at level 70, no associativity).
 Notation "x && y" := (BAnd x y) (in custom com at level 80, left associativity).
 Notation "'~' b" := (BNot b) (in custom com at level 75, right associativity).
 
-
 Open Scope com_scope.
-
 
 Fixpoint aeval (st : state)  (a : aexp) : nat :=
 match a with
@@ -91,7 +88,6 @@ end.
 Definition empty_st := (_ !-> 0).
 
 Notation "x '!->' v" := (x !-> v ; empty_st) (at level 100).
-
 
 Inductive com : Type :=
 | CSkip
@@ -132,7 +128,6 @@ st constr, st' constr at next level).
 (*Nuevas notaciones*)
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
-
 
 Inductive ceval : com -> state -> state -> Prop :=
 | E_Skip : forall st,
@@ -257,47 +252,37 @@ Arguments bassertion /.
 
 (*Definición de equivalencia en semántica operacional*)
 Definition cequiv (c1 c2 : com) : Prop :=
-  forall (st st' : state),
-    (st =[ c1 ]=> st') <-> (st =[ c2 ]=> st').
+  forall st st', st =[ c1 ]=> st' <-> st =[ c2 ]=> st'.
 
-
-(* Hoare Logic & Model-Theory *)
 Definition equiv_axiomatica (c1 c2 : com) : Prop :=
   forall P Q,
     {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
 
-
 Lemma cequiv_valid_hoare :
   forall c1 c2,
-  cequiv c1 c2 ->
-    forall P Q,
-      {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
+  cequiv c1 c2 -> equiv_axiomatica c1 c2.
 Proof.
   intros c1 c2 Heq P Q.
   split.
-  - unfold valid.
-    intros H st st' Hc HP.
+  - intros H st st' Hc HP.
     apply H with (st := st) (st' := st').
     + apply Heq.
       exact Hc.
     + exact HP.
-  - unfold valid.
-    intros H st st' Hc HP.
+  - intros H st st' Hc HP.
     apply H with (st := st) (st' := st').
     + apply Heq.
       exact Hc.
     + exact HP.
 Qed.
 
-Theorem S_equiv_axiomatica :
+Theorem S_equiv :
   forall b S,
   equiv_axiomatica
-    S
+    <{ S }>
     <{ if b then S else S end }>.
 Proof.
-  intros b S.
-  unfold equiv_axiomatica.
-  intros P Q.
+  intros.
   apply cequiv_valid_hoare.
   split.
   - intro H.
@@ -312,114 +297,6 @@ Proof.
     inversion H; subst.
     + assumption.
     + assumption.
-Qed.
-
-
-(****** Hoare Logic & Proof-Theory *******)
-
-Inductive derivable : Assertion -> com -> Assertion -> Prop :=
-  | H_Skip : forall P,
-      derivable P <{skip}> P
-  | H_Asgn : forall Q X a,
-      derivable (Q [X |-> a]) <{X := a}> Q
-  | H_Seq : forall P c Q d R,
-      derivable Q d R -> derivable P c Q -> derivable P <{c;d}> R
-  | H_If : forall P Q b c1 c2,
-    derivable (fun st => P st /\ bassertion b st) c1 Q ->
-    derivable (fun st => P st /\ ~(bassertion b st)) c2 Q ->
-    derivable P <{if b then c1 else c2 end}> Q
-  | H_While : forall P b c,
-    derivable (fun st => P st /\ bassertion b st) c P ->
-    derivable P <{while b do c end}> (fun st => P st /\ ~ (bassertion b st))
-  | H_Consequence : forall (P Q P' Q' : Assertion) c,
-    derivable P' c Q' ->
-    (forall st, P st -> P' st) ->
-    (forall st, Q' st -> Q st) ->
-    derivable P c Q.
-
-Notation "|- {{ P }} c {{ Q }}" :=
-  (derivable P c Q)
-  (at level 90).
-
-Theorem hoare_sound :
-  forall P c Q,
-  derivable P c Q ->
-  {{P}} c {{Q}}.
-Proof.
-Admitted.
-
-Theorem hoare_complete :
-  forall P c Q,
-  {{P}} c {{Q}} ->
-  derivable P c Q.
-  Proof.
-Admitted.
-
-Definition equiv_axiomatica_pt
-           (c1 c2 : com) : Prop :=
-(forall P Q,
-    (|- {{P}} c1 {{Q}})
-      <->
-    (|- {{P}} c2 {{Q}})).
-
-Theorem cequiv_implies_axiomatic_equiv :
-  forall c1 c2,
-  cequiv c1 c2 ->
-  equiv_axiomatica_pt c1 c2.
-Proof.
-  intros c1 c2 Hceq.
-  unfold equiv_axiomatica_pt.
-  intros P Q.
-  split.
-  - intro H.
-    apply hoare_complete.
-    apply cequiv_valid_hoare with (c1 := c1) (c2 := c2).
-    + exact Hceq.
-    + apply hoare_sound.
-      exact H.
-  - intro H.
-    apply hoare_complete.
-    apply cequiv_valid_hoare with (c1 := c1) (c2 := c2).
-    + intro st.
-      intro st'.
-      specialize (Hceq st st').
-      tauto.
-    + apply hoare_sound.
-      exact H.
-Qed.
-
-(* (S) es equivalente a (if b then S else S end) bajo semántica operacional*)
-Lemma S_cequiv :
-  forall b S,
-  cequiv
-    S
-    <{ if b then S else S end }>.
-Proof.
-  intros b S st st'.
-  split.
-  - intro H.
-    destruct (beval st b) eqn:Hb.
-    + apply E_IfTrue.
-      * exact Hb.
-      * exact H.
-    + apply E_IfFalse.
-      * exact Hb.
-      * exact H.
-  - intro H.
-    inversion H; subst.
-    + assumption.
-    + assumption.
-Qed.
-
-Theorem S_equiv_axiomatica_pt :
-  forall b S,
-  equiv_axiomatica_pt
-    S
-    <{ if b then S else S end }>.
-Proof.
-  intros b S.
-  apply cequiv_implies_axiomatic_equiv.
-  apply S_cequiv.
 Qed.
 
 End SemanticaAxiomatica.
