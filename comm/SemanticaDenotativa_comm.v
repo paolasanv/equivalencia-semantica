@@ -173,7 +173,7 @@ st =[ while b do c end ]=> st
 where "st =[ c ]=> st'" := (ceval c st st').
 
 
-Module SemantivaDenotativa.
+Module SemanticaDenotativa.
 
 Fixpoint A (a : aexp) : state -> nat :=
   fun st =>
@@ -255,4 +255,4 @@ Proof.
   - reflexivity.
 Qed.
 
-End SemantivaDenotativa.
+End SemanticaDenotativa.
