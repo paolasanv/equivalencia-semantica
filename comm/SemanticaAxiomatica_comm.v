@@ -172,14 +172,10 @@ where "st =[ c ]=> st'" := (ceval c st st').
 
 Module SemanticaAxiomatica.
 
-    
 Definition Assertion := state -> Prop.
-
 Definition Aexp : Type := state -> nat.
-
 Definition assert_of_Prop (P : Prop) : Assertion := fun _ => P.
 Definition Aexp_of_nat (n : nat) : Aexp := fun _ => n.
-
 Definition Aexp_of_aexp (a : aexp) : Aexp := fun st => aeval st a.
 
 Coercion assert_of_Prop : Sortclass >-> Assertion.
@@ -190,12 +186,11 @@ Arguments assert_of_Prop /.
 Arguments Aexp_of_nat /.
 Arguments Aexp_of_aexp /.
 
-Declare Custom Entry assn. (* The grammar for Hoare logic Assertions *)
+Declare Custom Entry assn. 
 Declare Scope assertion_scope.
 Bind Scope assertion_scope with Assertion.
 Bind Scope assertion_scope with Aexp.
 Delimit Scope assertion_scope with assertion.
-
 
 Notation "# f x .. y" := (fun st => (.. (f ((x:Aexp) st)) .. ((y:Aexp) st)))
                   (in custom assn at level 2,
@@ -204,7 +199,6 @@ Notation "# f x .. y" := (fun st => (.. (f ((x:Aexp) st)) .. ((y:Aexp) st)))
 
 Notation "P -> Q" := (fun st => (P:Assertion) st -> (Q:Assertion) st) (in custom assn at level 99, right associativity) : assertion_scope.
 Notation "P <-> Q" := (fun st => (P:Assertion) st <-> (Q:Assertion) st) (in custom assn at level 95) : assertion_scope.
-
 Notation "P \/ Q" := (fun st => (P:Assertion) st \/ (Q:Assertion) st) (in custom assn at level 85, right associativity) : assertion_scope.
 Notation "P /\ Q" := (fun st => (P:Assertion) st /\ (Q:Assertion) st) (in custom assn at level 80, right associativity) : assertion_scope.
 Notation "~ P" := (fun st => ~ ((P:Assertion) st)) (in custom assn at level 75, right associativity) : assertion_scope.
@@ -218,30 +212,17 @@ Notation "'True'" := True.
 Notation "'True'" := (fun st => True) (in custom assn at level 0) : assertion_scope.
 Notation "'False'" := False.
 Notation "'False'" := (fun st => False) (in custom assn at level 0) : assertion_scope.
-
 Notation "a + b" := (fun st => (a:Aexp) st + (b:Aexp) st) (in custom assn at level 50, left associativity) : assertion_scope.
 Notation "a - b" := (fun st => (a:Aexp) st - (b:Aexp) st) (in custom assn at level 50, left associativity) : assertion_scope.
 Notation "a * b" := (fun st => (a:Aexp) st * (b:Aexp) st) (in custom assn at level 40, left associativity) : assertion_scope.
-
 Notation "( x )" := x (in custom assn at level 0, x at level 99) : assertion_scope.
-
 Notation "$ f" := f (in custom assn at level 0, f constr at level 0) : assertion_scope.
 Notation "x" := (x%assertion) (in custom assn at level 0, x constr at level 0) : assertion_scope.
 
 Declare Scope hoare_spec_scope.
 Open Scope hoare_spec_scope.
 
-
-Definition assert_implies (P Q : Assertion) : Prop :=
-  forall st, P st -> Q st.
-
-Notation "P ->> Q" := (assert_implies P Q)
-                        (at level 80) : hoare_spec_scope.
-
-Notation "P <<->> Q" := (P ->> Q /\ Q ->> P)
-                          (at level 80) : hoare_spec_scope.
-
-Definition valid_hoare_triple
+Definition valid
            (P : Assertion) (c : com) (Q : Assertion) : Prop :=
   forall st st',
      st =[ c ]=> st' ->
@@ -249,10 +230,8 @@ Definition valid_hoare_triple
      Q st'.
     
 Notation "{{ P }}  c  {{ Q }}" :=
-  (valid_hoare_triple P c Q) (at level 90, c custom com at level 99)
+  (valid P c Q) (at level 90, c custom com at level 99)
   : hoare_spec_scope.
-
-
 
 Definition assertion_sub X (a:aexp) (P:Assertion) : Assertion :=
   fun (st : state) =>
@@ -262,16 +241,6 @@ Notation "P [ X |-> a ]" := (assertion_sub X a P)
                               (at level 10, X at next level, a custom com)
                           : assertion_scope.
 
-  (* Sustitución auxiliar *)
-(*Definition assn_sub X a (P:Assertion) : Assertion :=
-  fun (st : state) =>
-    P (X !-> aeval st a ; st).
-
-Notation "P [ X |-> a ]" := (assn_sub X a P)
-  (at level 10, X at next level, a custom com).*)
-
-
-
 Theorem hoare_asgn : forall Q X (a:aexp),
   {{Q [X |-> a]}} X := a {{Q}}.
 Proof.
@@ -279,21 +248,74 @@ Proof.
   inversion HE. subst.
   unfold assertion_sub in HQ. simpl in HQ. assumption.  Qed.
 
-
-
-Definition bassertion b : Assertion :=
-  fun st => (beval st b = true).
+Definition bassertion b : Assertion := fun st => (beval st b = true).
 
 Coercion bassertion : bexp >-> Assertion.
 
 Arguments bassertion /.
 
-(** A useful fact about [bassertion]: 
 
-Lemma bexp_eval_false : forall b st,
-  beval st b = false -> ~ ((bassertion b) st).
-Proof. congruence. Qed.
-*)
+(*Definición de equivalencia en semántica operacional*)
+Definition cequiv (c1 c2 : com) : Prop :=
+  forall (st st' : state),
+    (st =[ c1 ]=> st') <-> (st =[ c2 ]=> st').
+
+
+(* Hoare Logic & Model-Theory *)
+Definition equiv_axiomatica (c1 c2 : com) : Prop :=
+  forall P Q,
+    {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
+
+
+Lemma cequiv_valid_hoare :
+  forall c1 c2,
+  cequiv c1 c2 ->
+    forall P Q,
+      {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
+Proof.
+  intros c1 c2 Heq P Q.
+  split.
+  - unfold valid.
+    intros H st st' Hc HP.
+    apply H with (st := st) (st' := st').
+    + apply Heq.
+      exact Hc.
+    + exact HP.
+  - unfold valid.
+    intros H st st' Hc HP.
+    apply H with (st := st) (st' := st').
+    + apply Heq.
+      exact Hc.
+    + exact HP.
+Qed.
+
+Theorem S_equiv_axiomatica :
+  forall b S,
+  equiv_axiomatica
+    S
+    <{ if b then S else S end }>.
+Proof.
+  intros b S.
+  unfold equiv_axiomatica.
+  intros P Q.
+  apply cequiv_valid_hoare.
+  split.
+  - intro H.
+    destruct (beval st b) eqn:Hb.
+    + apply E_IfTrue.
+      * exact Hb.
+      * exact H.
+    + apply E_IfFalse.
+      * exact Hb.
+      * exact H.
+  - intro H.
+    inversion H; subst.
+    + assumption.
+    + assumption.
+Qed.
+
+
+(****** Hoare Logic & Proof-Theory *******)
 
 Inductive derivable : Assertion -> com -> Assertion -> Prop :=
   | H_Skip : forall P,
@@ -315,106 +337,9 @@ Inductive derivable : Assertion -> com -> Assertion -> Prop :=
     (forall st, Q' st -> Q st) ->
     derivable P c Q.
 
-
 Notation "|- {{ P }} c {{ Q }}" :=
   (derivable P c Q)
   (at level 90).
-
-
-Definition cequiv (c1 c2 : com) : Prop :=
-  forall (st st' : state),
-    (st =[ c1 ]=> st') <-> (st =[ c2 ]=> st').
-
-
-Definition equiv_axiomatica
-           (c1 c2 : com) : Prop :=
-
-(forall P Q,
-    (|- {{P}} c1 {{Q}})
-      <->
-    (|- {{P}} c2 {{Q}})).
-
-Lemma H_Consequence_pre : forall (P Q P': Assertion) c,
-    derivable P' c Q ->
-    (forall st, P st -> P' st) ->
-    derivable P c Q.
-Proof. eauto using H_Consequence. Qed.
-
-Lemma H_Consequence_post  : forall (P Q Q' : Assertion) c,
-    derivable P c Q' ->
-    (forall st, Q' st -> Q st) ->
-    derivable P c Q.
-Proof. eauto using H_Consequence. Qed.
-
-(*equivalencia usando tripletas de Haore*)
-Definition equiv_axiomatica_valida (c1 c2 : com) : Prop :=
-  forall P Q,
-    {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
-
-(*demo correspondiente en semantica operacional*)
-Lemma if_same_branch_cequiv :
-  forall b S,
-  cequiv
-    S
-    <{ if b then S else S end }>.
-Proof.
-  intros b S st st'.
-  split.
-
-  - intro H.
-    destruct (beval st b) eqn:Hb.
-    + apply E_IfTrue.
-      * exact Hb.
-      * exact H.
-    + apply E_IfFalse.
-      * exact Hb.
-      * exact H.
-
-  - intro H.
-    inversion H; subst.
-    + assumption.
-    + assumption.
-Qed.
-
-Lemma cequiv_preserves_valid_hoare :
-  forall c1 c2,
-  cequiv c1 c2 ->
-  forall P Q,
-    {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
-Proof.
-  intros c1 c2 Heq P Q.
-  split.
-
-  - unfold valid_hoare_triple.
-    intros H st st' Hc HP.
-    apply H with (st := st) (st' := st').
-    + apply Heq.
-      exact Hc.
-    + exact HP.
-
-  - unfold valid_hoare_triple.
-    intros H st st' Hc HP.
-    apply H with (st := st) (st' := st').
-    + apply Heq.
-      exact Hc.
-    + exact HP.
-Qed.
-
-Theorem if_equiv_valid :
-  forall b S,
-  equiv_axiomatica_valida
-    S
-    <{ if b then S else S end }>.
-Proof.
-  intros b S.
-  unfold equiv_axiomatica_valida.
-  intros P Q.
-  apply cequiv_preserves_valid_hoare.
-  apply if_same_branch_cequiv.
-Qed.
-
-
-(*equivalencia derivable |- *)
 
 Theorem hoare_sound :
   forall P c Q,
@@ -430,27 +355,31 @@ Theorem hoare_complete :
   Proof.
 Admitted.
 
+Definition equiv_axiomatica_pt
+           (c1 c2 : com) : Prop :=
+(forall P Q,
+    (|- {{P}} c1 {{Q}})
+      <->
+    (|- {{P}} c2 {{Q}})).
 
 Theorem cequiv_implies_axiomatic_equiv :
   forall c1 c2,
   cequiv c1 c2 ->
-  equiv_axiomatica c1 c2.
+  equiv_axiomatica_pt c1 c2.
 Proof.
   intros c1 c2 Hceq.
-  unfold equiv_axiomatica.
+  unfold equiv_axiomatica_pt.
   intros P Q.
   split.
-
   - intro H.
     apply hoare_complete.
-    apply cequiv_preserves_valid_hoare with (c1 := c1) (c2 := c2).
+    apply cequiv_valid_hoare with (c1 := c1) (c2 := c2).
     + exact Hceq.
     + apply hoare_sound.
       exact H.
-
   - intro H.
     apply hoare_complete.
-    apply cequiv_preserves_valid_hoare with (c1 := c1) (c2 := c2).
+    apply cequiv_valid_hoare with (c1 := c1) (c2 := c2).
     + intro st.
       intro st'.
       specialize (Hceq st st').
@@ -459,37 +388,38 @@ Proof.
       exact H.
 Qed.
 
-Theorem if_equiv :
+(* (S) es equivalente a (if b then S else S end) bajo semántica operacional*)
+Lemma S_cequiv :
   forall b S,
-  equiv_axiomatica
+  cequiv
+    S
+    <{ if b then S else S end }>.
+Proof.
+  intros b S st st'.
+  split.
+  - intro H.
+    destruct (beval st b) eqn:Hb.
+    + apply E_IfTrue.
+      * exact Hb.
+      * exact H.
+    + apply E_IfFalse.
+      * exact Hb.
+      * exact H.
+  - intro H.
+    inversion H; subst.
+    + assumption.
+    + assumption.
+Qed.
+
+Theorem S_equiv_axiomatica_pt :
+  forall b S,
+  equiv_axiomatica_pt
     S
     <{ if b then S else S end }>.
 Proof.
   intros b S.
   apply cequiv_implies_axiomatic_equiv.
-  apply if_same_branch_cequiv.
+  apply S_cequiv.
 Qed.
-
-(*
-Example if_equiv : 
-    forall b S,
-    equiv_axiomatica
-    <{S}>
-     <{ if b then S else S end }>.
-Proof.
-  unfold equiv_axiomatica.
-  unfold cequiv.
-  split.
-  + intros HS.
-    apply H_If.
-    - eapply H_Consequence_pre.
-      *  eassumption. 
-      * intros st [HP HBT]. assumption.
-    - eapply H_Consequence_pre.
-      * eassumption.
-      * intros st [HP HBT]. assumption.
-  + intros HIF.
-    eapply H_Consequence_pre.
-    - eapply H_If in HIF.*)
 
 End SemanticaAxiomatica.
