@@ -204,6 +204,49 @@ Qed.
 
 (*
 Programas equivalentes:
+           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
+bajo semántica operacional
+*)
+
+Example seq_equiv :
+    forall b S T R,
+    equiv_operacional
+        <{if b then (S ; T) else (R; T) end}>
+        <{(if b then S else R end); T }>.
+Proof.
+  split.
+  - intros. 
+  inversion H. subst.
+  + inversion H6. subst.
+    apply E_Seq with st'0.
+    ++ apply E_IfTrue.
+      * exact H5.
+      * exact H2.
+    ++ exact H7.
+  + inversion H6. subst. 
+    apply E_Seq with st'1.
+    ++ apply E_IfFalse.
+      * exact H5.
+      * exact H9.
+    ++ exact H12.
+  - intros.
+    inversion H. subst.
+    inversion H2. subst.
+      + apply E_IfTrue.
+        * exact H7.
+        * apply E_Seq with st'0.
+          ** exact H8.
+          ** exact H5.
+      +  apply E_IfFalse.
+        * exact H7.
+        * apply E_Seq with st'0.
+          ** exact H8.
+          ** exact H5.
+Qed.
+
+
+(*
+Programas equivalentes:
                 new x := a in skip ≡ skip
 bajo semántica operacional
 *)
@@ -244,6 +287,5 @@ Proof.
         + rewrite restore_update. reflexivity.
         + rewrite restore_update. apply E_Skip.
 Qed.     
-
         
 End SemanticaOperacional.

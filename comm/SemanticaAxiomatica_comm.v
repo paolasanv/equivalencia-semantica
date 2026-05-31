@@ -300,6 +300,19 @@ Proof.
     + assumption.
 Qed.
 
+(*
+Programas equivalentes:
+           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
+bajo semántica operacional
+*)
+
+Example seq_equiv :
+    forall b S T R,
+    equiv_operacional
+        <{if b then (S ; T) else (R; T) end}>
+        <{(if b then S else R end); T }>.
+Proof.
+  Admitted.
 
 (*
 Programas equivalentes:

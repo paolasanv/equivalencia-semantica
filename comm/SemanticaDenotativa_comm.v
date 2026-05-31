@@ -202,6 +202,12 @@ Definition equiv_denotativa (c1 c2 : com) : Prop :=
   forall st,
     [[ c1 ]] st = [[ c2 ]] st.
 
+(*
+Programas equivalentes:
+           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
+bajo semántica denotativa
+*)
+
 Example seq_equiv :
     forall b S T R,
     equiv_denotativa
