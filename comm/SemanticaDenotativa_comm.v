@@ -216,6 +216,13 @@ Proof.
     - reflexivity.
 Qed. 
 
+
+(*
+Programas equivalentes:
+                new x := a in skip ≡ skip
+bajo semántica denotativa
+*)
+
 Example equiv_local_skip :
   forall x a,
   equiv_denotativa

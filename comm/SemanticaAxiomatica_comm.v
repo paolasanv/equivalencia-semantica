@@ -1,5 +1,6 @@
 From Stdlib Require Import Arith.
 From Stdlib Require Import Strings.String.
+Require Import Coq.Logic.FunctionalExtensionality.
 
 Definition total_map (A : Type) := string -> A.
 
@@ -299,4 +300,50 @@ Proof.
     + assumption.
 Qed.
 
+
+(*
+Programas equivalentes:
+                new x := a in skip ≡ skip
+bajo semántica axiomática
+*)
+
+Lemma restore_update :
+  forall (st : state) (x : string) (n : nat),
+    (x !-> st x ; (x !-> n ; st)) = st.
+Proof.
+    intros.
+    unfold t_update.
+    apply functional_extensionality.
+    intro y.
+     destruct (x =? y)%string eqn:H1.
+    + apply String.eqb_eq in H1. subst. reflexivity.
+    + reflexivity.
+Qed. 
+
+Example equiv_local_skip :
+  forall x a,
+  equiv_axiomatica
+    <{new x := a in skip }>
+    <{skip}>.
+Proof.
+    intros.
+    apply cequiv_valid_hoare. (*Nótese que esta es la única diferencia respecto a la prueba en la semántica operacional*)
+    split.
+    - intros.
+      inversion H. subst.
+      inversion H7. subst.
+        rewrite restore_update.
+        apply E_Skip.
+    - intros.
+        inversion H. subst. 
+        rewrite <- (restore_update st' x (aeval st' a)).
+        apply E_New with
+            (n := aeval st' a)
+            (o := st' x)
+            (st' := (x !-> aeval st' a ; st')).
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. apply E_Skip.
+Qed.
+    
 End SemanticaAxiomatica.
