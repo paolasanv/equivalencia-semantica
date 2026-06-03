@@ -18,6 +18,31 @@ Notation "x '!->' v ';' m" := (t_update m x v)
 
 Definition state := total_map nat.
 
+(*
+        Definición de la sintaxis abstracta de COMM.
+
+<AExp> ::= <Nat>
+    | <Id>
+    | <AExpr> + <AExpr>
+    | <AExpr> - <AExpr>
+    | <AExpr> * <AExpr>
+
+<BExp> ::= true
+    | false
+    | <BExp> and <BExp> 
+    | not <BExp> 
+    | <AExpr> < <AExpr>
+    | <AExpr> = <AExpr>
+
+<Comm> ::= skip
+    | new <Id> := <Aexp> in <Comm>
+    | print <AExp>
+    | <Id> := <Aexp>
+    | <Comm> ; <Comm>
+    | if <BExp> then <Comm> else <Comm> end
+    | while <BExp> do <Comm> end
+*)
+
 Inductive aexp : Type :=
 | ANum (n : nat)
 | AId (x : string)
@@ -130,6 +155,10 @@ st constr, st' constr at next level).
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
 
+
+
+Module SemanticaOperacional.
+
 Inductive ceval : com -> state -> state -> Prop :=
 | E_Skip : forall st,
     st =[ CSkip ]=> st
@@ -166,11 +195,17 @@ st =[ while b do c end ]=> st
 where "st =[ c ]=> st'" := (ceval c st st').
 
 
-Module SemanticaOperacional.
-
+(*Definición de equivalencia en semántica operacional*)
 Definition equiv_operacional (c1 c2 : com) : Prop :=
   forall st st', st =[ c1 ]=> st' <-> st =[ c2 ]=> st'.
 
+  
+(*
+                        Ejemplo #1 
+Demostración de equivalencia de programas bajo el enfoque de semántica operacional 
+
+    while b do S end ≡ if b then (S; while b do S end) else skip end
+*)
 Example while_equiv :
   forall b S,
   equiv_operacional
@@ -202,12 +237,13 @@ Proof.
       apply E_WhileFalse. assumption.
 Qed.
 
-(*
-Programas equivalentes:
-           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
-bajo semántica operacional
-*)
 
+(*
+                    Programas equivalentes compartido #1
+           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
+
+Demostración bajo semántica operacional
+*)
 Example seq_equiv :
     forall b S T R,
     equiv_operacional
@@ -246,11 +282,11 @@ Qed.
 
 
 (*
-Programas equivalentes:
+                    Programas equivalentes compartido #2
                 new x := a in skip ≡ skip
-bajo semántica operacional
-*)
 
+Demostración bajo semántica operacional
+*)
 Lemma restore_update :
   forall (st : state) (x : string) (n : nat),
     (x !-> st x ; (x !-> n ; st)) = st.

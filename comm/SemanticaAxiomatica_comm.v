@@ -18,6 +18,31 @@ Notation "x '!->' v ';' m" := (t_update m x v)
 
 Definition state := total_map nat.
 
+(*
+        Definición de la sintaxis abstracta de COMM.
+
+<AExp> ::= <Nat>
+    | <Id>
+    | <AExpr> + <AExpr>
+    | <AExpr> - <AExpr>
+    | <AExpr> * <AExpr>
+
+<BExp> ::= true
+    | false
+    | <BExp> and <BExp> 
+    | not <BExp> 
+    | <AExpr> < <AExpr>
+    | <AExpr> = <AExpr>
+
+<Comm> ::= skip
+    | new <Id> := <Aexp> in <Comm>
+    | print <AExp>
+    | <Id> := <Aexp>
+    | <Comm> ; <Comm>
+    | if <BExp> then <Comm> else <Comm> end
+    | while <BExp> do <Comm> end
+*)
+
 Inductive aexp : Type :=
 | ANum (n : nat)
 | AId (x : string)
@@ -130,6 +155,7 @@ st constr, st' constr at next level).
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
 
+(*Semántica operacional de COMM*)
 Inductive ceval : com -> state -> state -> Prop :=
 | E_Skip : forall st,
     st =[ CSkip ]=> st
@@ -251,10 +277,11 @@ Coercion bassertion : bexp >-> Assertion.
 Arguments bassertion /.
 
 
-(*Definición de equivalencia en semántica operacional*)
+(*Definición de equivalencia bajo el modelo de estados*)
 Definition cequiv (c1 c2 : com) : Prop :=
   forall st st', st =[ c1 ]=> st' <-> st =[ c2 ]=> st'.
 
+(*Definición de equivalencia en semántica axiomática*)
 Definition equiv_axiomatica (c1 c2 : com) : Prop :=
   forall P Q,
     {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
@@ -277,7 +304,14 @@ Proof.
     + exact HP.
 Qed.
 
-Theorem S_equiv :
+
+(*
+                        Ejemplo #3
+Demostración de equivalencia de programas bajo el enfoque de semántica axiomática 
+
+                S ≡ if b then S else S end
+*)
+Example S_equiv :
   forall b S,
   equiv_axiomatica
     <{ S }>
@@ -301,25 +335,56 @@ Proof.
 Qed.
 
 (*
-Programas equivalentes:
+                    Programas equivalentes compartido #1
            if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
-bajo semántica operacional
-*)
 
+Demostración bajo semántica axiomática
+*)
 Example seq_equiv :
     forall b S T R,
-    equiv_operacional
+    equiv_axiomatica
         <{if b then (S ; T) else (R; T) end}>
         <{(if b then S else R end); T }>.
 Proof.
-  Admitted.
+  intros.
+  apply cequiv_valid_hoare. (*Nótese que esta es la única diferencia respecto a la prueba en la semántica operacional*)
+    split.
+  - intros. 
+  inversion H. subst.
+  + inversion H6. subst.
+    apply E_Seq with st'0.
+    ++ apply E_IfTrue.
+      * exact H5.
+      * exact H2.
+    ++ exact H7.
+  + inversion H6. subst. 
+    apply E_Seq with st'1.
+    ++ apply E_IfFalse.
+      * exact H5.
+      * exact H9.
+    ++ exact H12.
+  - intros.
+    inversion H. subst.
+    inversion H2. subst.
+      + apply E_IfTrue.
+        * exact H7.
+        * apply E_Seq with st'0.
+          ** exact H8.
+          ** exact H5.
+      +  apply E_IfFalse.
+        * exact H7.
+        * apply E_Seq with st'0.
+          ** exact H8.
+          ** exact H5.
+Qed.
+  
 
 (*
-Programas equivalentes:
+                   Programas equivalentes compartido #2
                 new x := a in skip ≡ skip
-bajo semántica axiomática
-*)
 
+Demostración bajo semántica axiomática
+*)
 Lemma restore_update :
   forall (st : state) (x : string) (n : nat),
     (x !-> st x ; (x !-> n ; st)) = st.

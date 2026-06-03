@@ -18,6 +18,30 @@ Notation "x '!->' v ';' m" := (t_update m x v)
 
 Definition state := total_map nat.
 
+(*
+        Definición de la sintaxis abstracta de COMM.
+
+<AExp> ::= <Nat>
+    | <Id>
+    | <AExpr> + <AExpr>
+    | <AExpr> - <AExpr>
+    | <AExpr> * <AExpr>
+
+<BExp> ::= true
+    | false
+    | <BExp> and <BExp> 
+    | not <BExp> 
+    | <AExpr> < <AExpr>
+    | <AExpr> = <AExpr>
+
+<Comm> ::= skip
+    | new <Id> := <Aexp> in <Comm>
+    | print <AExp>
+    | <Id> := <Aexp>
+    | <Comm> ; <Comm>
+    | if <BExp> then <Comm> else <Comm> end
+*)
+
 Inductive aexp : Type :=
 | ANum (n : nat)
 | AId (x : string)
@@ -124,36 +148,10 @@ st constr, st' constr at next level).
 Notation "'print' a" := (CPrint a) (in custom com at level 90) : com_scope.
 Notation "'new' x ':=' a 'in' c" := (CNew x a c) (in custom com at level 89, x constr, a at level 85, c at level 99) : com_scope.
 
-Inductive ceval : com -> state -> state -> Prop :=
-| E_Skip : forall st,
-    st =[ CSkip ]=> st
-| E_Asgn : forall st a n x,
-    aeval st a = n ->
-    st =[ x := a ]=> (x !-> n ; st)
-| E_Seq : forall c1 c2 st st' st'',
-    st =[ c1 ]=> st' ->
-    st' =[ c2 ]=> st'' ->
-    st =[ c1 ; c2 ]=> st''
-| E_IfTrue : forall st st' b c1 c2,
-    beval st b = true ->
-    st =[ c1 ]=> st' ->
-    st =[ if b then c1 else c2 end]=> st'
-| E_IfFalse : forall st st' b c1 c2,
-    beval st b = false ->
-    st =[ c2 ]=> st' ->
-    st =[ if b then c1 else c2 end]=> st'
-| E_Print : forall st a, (*nuevo*)
-    st =[ print a ]=> st
-| E_New : forall st st' x a c n o, (*nuevo*)
-    aeval st a = n ->
-    o = st x ->
-    (x !-> n ; st) =[ c ]=> st' ->
-    st =[ new x := a in c ]=> (x !-> o ; st')
-where "st =[ c ]=> st'" := (ceval c st st').
-
 
 Module SemanticaDenotativa.
 
+(*Función semántica para expresiones aritméticas*)
 Fixpoint A (a : aexp) : state -> nat :=
     fun st =>
         match a with
@@ -163,7 +161,7 @@ Fixpoint A (a : aexp) : state -> nat :=
         | AMinus a1 a2 => A a1 st - A a2 st
         | AMult a1 a2 => A a1 st * A a2 st
         end.
-
+(*Función semántica para expresiones booleanas*)
 Fixpoint B (b : bexp) : state -> bool :=
     fun st =>
         match b with
@@ -177,6 +175,7 @@ Fixpoint B (b : bexp) : state -> bool :=
         | BAnd b1 b2 => andb (B b1 st) (B b2 st)
         end.
 
+(*Función semántica para comandos*)
 Fixpoint C (c : com) : state -> state :=
   fun st =>
     match c with
@@ -198,16 +197,38 @@ Fixpoint C (c : com) : state -> state :=
 Notation "[[ c ]]" := (C c)
   (at level 0).
 
+(*Definición de equivalencia en semántica denotativa*)
 Definition equiv_denotativa (c1 c2 : com) : Prop :=
   forall st,
     [[ c1 ]] st = [[ c2 ]] st.
 
-(*
-Programas equivalentes:
-           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
-bajo semántica denotativa
-*)
 
+(*
+                        Ejemplo #2
+Demostración de equivalencia de programas bajo el enfoque de semántica denotativa 
+
+               if b the S else T ≡ if ~ b then T else S end
+*)
+Example if_equiv :
+  forall b S T,
+  equiv_denotativa
+    <{if b then S else T end}>
+    <{if ~ b then T else S end}>.
+Proof.
+    intros b S T st.
+    simpl.
+    destruct (B b st).
+    + reflexivity.
+    + reflexivity.
+Qed. 
+
+
+(*
+                    Programas equivalentes compartido #1
+           if b then (S ; T) else (R; T) end ≡ (if b then S else R end); T
+
+Demostración bajo semántica denotativa
+*)
 Example seq_equiv :
     forall b S T R,
     equiv_denotativa
@@ -224,11 +245,11 @@ Qed.
 
 
 (*
-Programas equivalentes:
+                   Programas equivalentes compartido #2
                 new x := a in skip ≡ skip
-bajo semántica denotativa
-*)
 
+Demostración bajo semántica denotativa
+*)
 Example equiv_local_skip :
   forall x a,
   equiv_denotativa
