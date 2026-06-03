@@ -201,7 +201,7 @@ Definition equiv_operacional (c1 c2 : com) : Prop :=
 
   
 (*
-                        Ejemplo #1 
+                        Ejemplo #3
 Demostración de equivalencia de programas bajo el enfoque de semántica operacional 
 
     while b do S end ≡ if b then (S; while b do S end) else skip end

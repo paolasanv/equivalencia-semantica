@@ -306,7 +306,7 @@ Qed.
 
 
 (*
-                        Ejemplo #3
+                        Ejemplo #1
 Demostración de equivalencia de programas bajo el enfoque de semántica axiomática 
 
                 S ≡ if b then S else S end
