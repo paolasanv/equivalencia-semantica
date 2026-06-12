@@ -1,0 +1,34 @@
+La noción de \enquote{equivalencia} determina si dos conceptos pueden considerarse iguales dentro de un  contexto específico. Es una relación que se establece cuando dichos conceptos comparten características comunes en uno o varios aspectos relevantes.
+
+En la teoría de lenguajes de programación, uno de los conceptos sobre los cuales puede definirse esta relación es el de programa. Un \enquote{programa} es la representación formal de un proceso dinámico, expresado mediante reglas sintácticas establecidas por un lenguaje de programación \cite{abelson1996sicp}; no se limita a ser una secuencia válida de caracteres, sino que incorpora un conjunto definido de comportamientos y  resultados posibles durante su ejecución \cite{lamport1985axiomatic}. 
+
+Estos comportamientos y resultados emergen de las construcciones fundamentales que conforman la mayoría de los programas: \emph{expresiones} y \emph{comandos}. 
+
+
+Las \enquote{expresiones} corresponden a construcciones que pueden evaluarse y reducirse a un valor, mientras que los \enquote{comandos} representan instrucciones asociadas a modificaciones sobre el estado del programa, generalmente sin producir un valor como resultado \cite{tozzi2025statementexpression}. 
+Muchos lenguajes de programación establecen una distinción explícita entre expresiones y comandos, lo que conduce a criterios de equivalencia semántica distintos según la naturaleza de la construcción analizada.
+
+
+A partir de estas ideas surge el problema ---generalmente indecidible--- de la \emph{equivalencia de programas}: determinar si dos programas son equivalentes bajo la misma definición de equivalencia \cite{lahiri2018program}.
+
+
+\subsection{Equivalencia en contexto estático}
+La \enquote{equivalencia de tipos} es la relación definida por un sistema de tipos para determinar cuándo dos expresiones de tipo representan el mismo tipo \cite{fiveable_type_equivalence}. Esta equivalencia puede clasificarse en dos formas \cite{louden2020programming}:
+
+\begin{itemize}
+\item \textbf{Equivalencia estructural.} 
+Dos tipos son equivalentes si poseen la misma estructura; es decir, si fueron construidos utilizando los mismos constructores de tipos y sus componentes internos tienen los mismos tipos organizados de la misma manera.
+
+\item \textbf{Equivalencia por nombre.} Dos tipos son equivalentes solo si provienen de la misma declaración de tipo.
+\end{itemize}
+
+
+\subsection{Equivalencia en contexto dinámico }
+
+La \enquote{equivalencia observacional} o \enquote{equivalencia contextual} establece que dos programas son equivalentes si cualquier ocurrencia del primero en un programa completo puede ser reemplazada por el segundo sin afectar los resultados observables de su ejecución \cite{Pitts2002Operational}; es decir, no existe ningún contexto del programa completo que permita distinguir aquel  intercambio entre programas.
+
+
+En otras palabras, dos programas son equivalentes si, aun teniendo implementaciones internas distintas, exhiben la misma funcionalidad al producir los mismos comportamientos observables ante las mismas entradas.
+
+
+Lo anterior requiere definir la equivalencia de manera específica para expresiones y comandos: dos expresiones son equivalentes si se evalúan al mismo resultado en todo estado, mientras que dos comandos son equivalentes si, para cualquier estado inicial, ambos divergen o ambos terminan en el mismo estado final \cite{Pierce:SF2}.

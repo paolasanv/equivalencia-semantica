@@ -1,0 +1,130 @@
+Este enfoque semántico describe paso a paso cómo se ejecuta un programa, considerando los estados intermedios además del resultado final \cite{nielson1992semantics}.
+
+La semántica operacional se formaliza mediante un sistema de transiciones que define dos tipos de configuraciones:
+\[
+\begin{aligned}
+\langle S, s \rangle &\quad \parbox[t]{0.8\columnwidth}{%
+indica que la instrucción $S$ será ejecutada desde el estado $s$, y} \\
+s &\quad \text{representa un estado final}
+\end{aligned}
+\]
+
+
+Existen dos enfoques para especificar la semántica operacional, los cuales difieren en la manera de definir la relación de transición \cite{nielson1992semantics}. 
+
+La relación de transición se define mediante reglas de inferencia, cuya aplicación sucesiva permite construir árboles de derivación que representan formalmente las distintas etapas de ejecución de un programa. Esto permite razonar formalmente sobre los programas y sus propiedades, ya que dichos árboles justifican los pasos de ejecución necesarios para demostrar una determinada propiedad \cite{nielson1992semantics}.
+
+\subsubsection{Semántica natural}
+
+También conocida como \emph{semántica de paso grande}, es un modelo de la semántica operacional que describe cómo se obtiene directamente el resultado final de la evaluación de las expresiones. 
+
+La \enquote{semántica natural} de un lenguaje $T$ está dada por \cite{hutton2023semantics}:
+\begin{itemize}
+    \item un dominio $V$ de valores semánticos, y
+    \item una relación de transición entre términos de $T$ y valores en $V$, que asocia a cada término los valores que pueden obtenerse mediante su ejecución completa. 
+\end{itemize}
+
+Esta relación describe cómo la ejecución de una instrucción transforma un estado inicial en un estado final \cite{nielson1992semantics}. 
+
+Una transición en semántica de paso grande se escribe
+\[
+\langle S, s \rangle \Rightarrow s'
+\]
+para representar que la evaluación de $S$ en el estado $s$ da lugar al estado $s'$. 
+
+Si el estado \(s'\) existe, se dice que la ejecución de \(S\) \emph{termina}; en caso contrario, se dice que la ejecución  \emph{diverge}. 
+
+
+Definida la relación de transición para la semántica de paso grande, se puede definir formalmente cuándo dos programas se consideran equivalentes. 
+
+\begin{definition}[Equivalencia en semántica natural]
+Dos programas $S_1$ y $S_2$ son semánticamente equivalentes, si para todos los estados $s$ y $s'$  
+\[
+\langle S_1, s \rangle \Rightarrow s'
+\quad \text{si y solo si} \quad
+\langle S_2, s \rangle \Rightarrow s'
+\]
+\end{definition}
+
+
+La definición anterior establece que dos programas son equivalentes si, partiendo del mismo estado inicial, terminan exactamente en los mismos estados finales.
+
+
+Los estados finales dependen de la categoría sintáctica considerada. En el caso de las expresiones, la equivalencia se define por la obtención del mismo valor de evaluación. En el caso de los comandos, la equivalencia se caracteriza por producir el mismo estado final cuando se ejecutan desde un mismo estado inicial.
+
+Además, esta definición considera equivalentes a dos programas cuando, para un mismo estado inicial,  ninguno de ellos puede derivar un valor o estado final. En consecuencia, la definición no distingue entre programas que se atascan y programas que divergen, ya que en ambos casos no existe una derivación hacia un resultado final.
+
+
+%----------------------------
+
+\subsubsection{Semántica estructural}
+También conocida como \emph{semántica de paso pequeño}, su propósito es describir cómo se llevan a cabo los pasos individuales de las ejecuciones \cite{nielson1992semantics}.
+
+
+La \enquote{semántica estructural} de un lenguaje $T$ está dada por \cite{hutton2023semantics}:
+\begin{itemize}
+    \item un dominio $S$ de estados de ejecución, y
+    \item una relación de transición en $S$ que relaciona cada estado con todos los estados a los que se puede llegar realizando un solo paso de ejecución.
+\end{itemize}
+
+La relación de transición tiene la forma
+\[
+\langle S, s \rangle \to \gamma
+\]
+y describe un paso individual en la ejecución de \(S\). 
+
+Si \(\gamma\) es de la forma:
+
+\[
+\begin{aligned}
+\langle S', s' \rangle &\quad \parbox[t]{0.8\columnwidth}{%
+la ejecución no ha terminado y la configuración resultante representa el cálculo restante.} \\
+s' &\quad \parbox[t]{0.8\columnwidth}{la ejecución de \(S\) desde el estado \(s\) ha finalizado en el estado \(s'\).}
+\end{aligned}
+\]
+
+
+Una configuración \(\langle S, s \rangle\) se considera \emph{atascada} si no existe  una configuración \(\gamma\) tal que $\langle S, s \rangle \to \gamma$.
+
+Dado un programa $S$ y un estado $s$, una secuencia de derivación desde la configuración inicial $\langle S,s\rangle$ puede ser:
+
+\begin{itemize}
+    \item \emph{finita} 
+    \[\gamma_0,\gamma_1,\ldots,\gamma_k\]
+    tal que $\gamma_0=\langle S,s\rangle$ y
+    $\gamma_i \to \gamma_{i+1}$ para todo
+    $0\leq i<k$, donde $\gamma_k$ es una
+    configuración terminal o atascada.
+
+    \item \emph{infinita} 
+    \[
+    \gamma_0,\gamma_1,\gamma_2,\ldots
+    \]
+    tal que $\gamma_0=\langle S,s\rangle$ y
+    $\gamma_i \to \gamma_{i+1}$ para todo
+    $i\geq 0$.
+\end{itemize}
+
+La ejecución de un programa $S$ desde un estado $s$ se considera que \emph{termina} si existe una secuencia de derivación finita
+desde $\langle S,s\rangle$ hasta una configuración terminal. En tal caso se denota $\langle S,s\rangle \to^{*} \gamma$.
+
+Por otro lado, se considera que la ejecución \emph{diverge} si existe una secuencia de derivación infinita
+desde $\langle S,s\rangle$.
+
+
+Una vez definidas las nociones asociadas a la relación de transición, se presenta la definición formal de equivalencia en semántica de paso pequeño.
+
+\begin{definition}[Equivalencia en semántica estructural]
+Dos programas $S_1$ y $S_2$ son semánticamente equivalentes, si para todos los estados $s$
+
+\begin{itemize}
+    \item $\langle S_1, s \rangle \to ^* \gamma $ si y solo si $\langle S_2, s \rangle \to ^* \gamma$ donde $\gamma$ es una configuración atascada o terminal, y 
+    \item existe una derivación infinita iniciada en $\langle S_1, s \rangle$ si y solo si existe una derivación infinita iniciada en $\langle S_2, s \rangle$. 
+\end{itemize}
+\end{definition}
+
+A grandes rasgos, la equivalencia en semántica estructural es análoga a la equivalencia en semántica natural. La principal diferencia radica en que la semántica de paso pequeño describe explícitamente cada transición de la ejecución, proporcionando una caracterización más detallada del comportamiento de los programas.
+
+Dos programas son equivalentes si, para todo estado inicial, alcanzan exactamente las mismas configuraciones terminales o atascadas mediante un número finito de transiciones. En particular, cuando ambos programas se atascan, la equivalencia se mantiene si ninguno de ellos puede continuar su ejecución mediante la aplicación de alguna regla de transición.
+
+Asimismo, la definición contempla programas que no terminan. En este caso, dos programas son equivalentes cuando, para todo estado inicial, ninguno de ellos alcanza un valor o estado final debido a que sus ejecuciones pueden prolongarse indefinidamente.

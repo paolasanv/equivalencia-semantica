@@ -1,0 +1,9 @@
+La equivalencia es un pilar fundamental de la teoría de la computación, ya que busca determinar si dos programas pueden considerarse iguales dentro de un mismo contexto. 
+
+Lo anterior implica demostrar que ambos programas son indistinguibles según un criterio formalmente definido. Sin embargo, el problema general de la equivalencia de programas es \emph{indecidible} debido a su reducción al problema de la detención (\textit{Halting Problem}). Por ello, no existe un algoritmo universal capaz de determinar si dos programas arbitrarios son equivalentes. En consecuencia, las distintas nociones de equivalencia deben centrarse en aspectos específicos del comportamiento de los programas.
+
+Lo anterior conduce a reflexionar sobre cómo cambia la noción de equivalencia según el tipo de semántica utilizada. La respuesta radica en que la equivalencia de programas está determinada por una relación de observación dictada por el marco semántico elegido. Dependiendo de si se analiza el comportamiento observable paso a paso (semántica operacional), el objeto matemático abstracto que representa el programa (semántica denotativa) o las propiedades lógicas que pueden demostrarse sobre él (semántica axiomática); el criterio para considerar dos programas como \textit{iguales} varía significativamente.
+
+Comprender estas diferencias tiene un impacto directo y fundamental en áreas como la ingeniería de software y la verificación formal. Por ejemplo, la optimización de compiladores debe garantizar que las transformaciones de código —como la eliminación de código muerto, el plegamiento de constantes, entre otras— mejoren el rendimiento sin alterar la equivalencia semántica del programa original.
+
+En este trabajo se estudian las principales nociones de equivalencia semántica derivadas de los enfoques operacional, denotativo y axiomático. Se analizan sus fundamentos teóricos, sus diferencias conceptuales y su utilidad para el razonamiento formal sobre programas.

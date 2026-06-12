@@ -1,0 +1,79 @@
+El enfoque axiomático define el significado de los programas en términos de especificaciones lógicas sobre su comportamiento, centrándose en las propiedades que pueden demostrarse sobre los estados del programa antes y después de su ejecución \cite{cornell2014lecture09}. La idea central es expresar afirmaciones lógicas sobre dicha ejecución. 
+
+
+Una \enquote{afirmación} es una \textit{terna de Hoare} expresada de la forma
+\[\{P\}\ S\ \{Q\}\]
+
+donde 
+\[
+\begin{aligned}
+S &\text{ denota un programa y}, \\
+P, Q &\text{ son predicados lógicos.}
+\end{aligned}
+\]
+
+Esta terna de \emph{correctitud parcial} expresa que toda ejecución terminante de \(S\) que parte de un estado donde se cumple la precondición \(P\), concluye en un estado que satisface la postcondición \(Q\).  
+
+La \enquote{semántica axiomática} de un lenguaje $T$ está dada por \cite{aldrich2018hoarelogic}: 
+
+\begin{itemize}
+    \item un conjunto de axiomas sobre $T$
+    \item un conjunto de reglas de inferencia que permiten establecer la veracidad de las afirmaciones. 
+\end{itemize}
+
+
+Este tipo de semántica puede analizarse desde dos perspectivas fundamentales de la lógica matemática: la \enquote{teoría de modelos} y la \enquote{teoría de la demostración}~\cite{Pierce:SF2}.
+
+\subsubsection{En la teoría de modelos}
+
+La teoría de modelos estudia las relaciones entre los lenguajes formales y las estructuras matemáticas, siendo la \enquote{verdad} el puente que conecta ambos ámbitos \cite{Manzano1989}. Desde esta perspectiva, la semántica axiomática se fundamenta en un concepto formal de \emph{validez} para las afirmaciones sobre programas.
+
+Se dice que una terna de Hoare es \enquote{semánticamente válida} si y solo si, para todo estado $s$, se cumple que~\cite{nielson1992semantics}
+\[
+(s \vDash P \land \langle S,s\rangle \Rightarrow s') \implies s' \vDash Q.
+\]
+En tal caso, se escribe
+\[
+\vDash \{P\}\,S\,\{Q\}.\]
+
+Es decir, una tripleta es \emph{válida} cuando, para cualquier estado inicial \(s\) que satisfaga la precondición \(P\), toda ejecución terminante del programa \(S\) conduce a un estado \(s'\) que satisface la postcondición \(Q\) \cite{winskel1993formal}.
+
+Esta noción de validez se apoya en un modelo semántico basado en transiciones de estados, que describe formalmente el comportamiento de los programas \cite{Pierce:SF2}. En consecuencia, el significado de una terna de Hoare depende de cómo las ejecuciones del programa, descritas mediante transiciones de estado, satisfacen la especificación dada.
+
+
+A partir de esta caracterización semántica puede definirse la equivalencia entre programas.
+
+\begin{definition}[Equivalencia en semántica axiomática y teoría de modelos]
+Dos programas $S_1$ y $S_2$ son semánticamente equivalentes si, para toda precondición $P$ y toda postcondición $Q$,
+\[
+\vDash \{P\} S_1 \{Q\}
+\quad \text{si y solo si} \quad
+\vDash \{P\} S_2 \{Q\}.
+\]
+\end{definition}
+
+Desde la teoría de modelos, dos programas comparten el mismo significado si son indistinguibles ante cualquier especificación lógica; es decir, cualquier descripción válida sobre el primer programa debe ser mutuamente válida para el segundo bajo el modelo de estados subyacente. 
+
+
+\subsubsection{En la teoría de la demostración}
+
+La teoría de la demostración, o teoría de la prueba, estudia las demostraciones en los sistemas lógicos, analizando su estructura, los procedimientos para transformarlas y las traducciones sintácticas entre teorías formales \cite{TroelstraSchwichtenberg2000}.
+
+En este sentido, la semántica axiomática se centra en la derivabilidad de las afirmaciones sobre programas. En particular, una terna de Hoare se considera válida cuando puede obtenerse a partir de los axiomas y reglas de inferencia del sistema lógico. Esto se expresa mediante la notación
+\[
+\vdash \{P\}\ S\ \{Q\}
+\]
+que indica que la terna de Hoare puede demostrarse sintácticamente.
+
+La equivalencia axiomática de programas, en la teroría de la prueba, se define de la siguiente manera.
+
+\begin{definition}[Equivalencia en semántica axiomática y teoría de la demostración]
+Dos programas $S_1$ y $S_2$ son derivacionalmente equivalentes si, para toda precondición $P$ y toda postcondición $Q$,
+\[
+\vdash \{P\}\ S_1\ \{Q\}
+\quad \text{si y solo si} \quad
+\vdash \{P\}\ S_2\ \{Q\}.
+\]
+\end{definition}
+
+A diferencia del enfoque basado en teoría de modelos, donde el significado de una terna se define mediante las ejecuciones del programa sobre estados, la teoría de la demostración interpreta las afirmaciones en términos de su derivación sintáctica. Es decir, el significado de una especificación está determinado por las reglas que permiten construir una demostración de ella \cite{Pierce:SF2}. Por ello, dos programas son equivalentes cuando satisfacen las mismas especificaciones que pueden derivarse a partir de las reglas de inferencia. 

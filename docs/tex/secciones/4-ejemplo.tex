@@ -1,0 +1,256 @@
+Para introducir la noción de equivalencia de programas, se desarrolla la semántica del lenguaje de programación imperativo miniatura \textsc{Comm} \cite{bauer}. Este lenguaje contiene construcciones básicas como asignaciones, composición secuencial, condicionales y ciclos \textit{while}.
+
+La sintaxis abstracta de \textsc{Comm} se define inductivamente como sigue. 
+\begin{figure}[ht]
+\centering
+{\footnotesize
+\[
+\begin{array}{rcl}
+A & ::= & n
+      \mid x
+      \mid A + A
+      \mid A - A
+      \mid A * A
+      \\[1mm]
+
+B & ::= & \mathtt{true}
+      \mid \mathtt{false}
+      \mid B\ \mathtt{and}\ B
+      \mid  \mathtt{not}\ B
+      \mid A < A
+      \mid A =A
+      \\[1mm]
+
+C & ::= & \mathtt{skip}
+      \mid \mathtt{new}\ x := A\ \mathtt{in}\ C
+      \mid \mathtt{print}\ A
+      \mid x := A
+      \mid C; C \\ 
+    & \mid & \mathtt{if}\ B\ \mathtt{then}\ C\ \mathtt{else}\ C\ \mathtt{end}
+      \mid \mathtt{while}\ B\ \mathtt{do}\ C\ \mathtt{end}
+\end{array}
+\]
+}
+\caption{Sintaxis abstracta del lenguaje \textsc{Comm}.}
+\end{figure}
+
+El objetivo es demostrar la siguiente equivalencia entre dos programas de \textsc{Comm}.
+
+\begin{proposicion}
+Sea $x$ un identificador y sea $a$ una expresión aritmética. Entonces,
+\[
+      \mathtt{new }\ x := a\ \mathtt{in}\ \mathtt{skip} \equiv \mathtt{skip}
+\]
+\end{proposicion}
+
+Aunque la equivalencia anterior intuitivamente expresa que la creación de una variable local seguida de una instrucción sin efecto observable no altera el comportamiento del programa, cada enfoque semántico la formaliza de manera diferente. 
+
+Por ello, se propone demostrar dicha proposición desde las perspectivas operacional, denotativa y axiomática, con el objetivo de analizar y contrastar los criterios que cada una utiliza para establecer la equivalencia entre programas.
+
+Adicionalmente, las demostraciones se desarrollan con el apoyo del asistente de pruebas \textsc{Rocq}, que funciona como herramienta para la formalización y verificación de dichas semánticas.
+
+La implementación en \textsc{Rocq} de la semántica operacional y axiomática de \textsc{Comm}  se basa en el trabajo de \cite{Pierce:SF2}.
+
+
+%===================
+\subsection{Semántica operacional de \textsc{Comm}}
+La Proposición 1 puede formalizarse mediante la semántica operacional, en particular mediante la semántica de paso grande, de la siguiente manera.
+
+\begin{lema}
+Para todo identificador $x$, toda expresión aritmética $a$ y todo estado $s$,
+
+\[
+\begin{gathered}
+\langle \mathtt{new }\ x := a\ \mathtt{in}\ \mathtt{skip}, s \rangle \Rightarrow s'
+\\
+\Longleftrightarrow 
+\\
+\langle \mathtt{skip}, s \rangle \Rightarrow s'
+\end{gathered}
+\]
+\end{lema}
+
+
+En \textsc{Rocq}, la equivalencia de programas bajo semántica natural se formaliza mediante la siguiente definición. Dos programas son equivalentes si inducen exactamente la misma relación entre estados iniciales y finales.
+
+\begin{lstlisting}[caption={Definición de equivalencia operacional en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Definition equiv_operacional (c1 c2 : com) : Prop := 
+forall st st', 
+            st =[ c1 ]=> st' <-> st =[ c2 ]=> st'.
+\end{lstlisting}
+
+La formalización del Lema 1 y su correspondiente demostración en \textsc{Rocq} se muestran a continuación.
+
+\begin{lstlisting}[caption={Programas equivalentes con semántica natural en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Example equiv_local_skip :
+ forall x a,
+ equiv_operacional
+            <{ new x:=a in skip }>
+            <{ skip }>.
+Proof.
+split.
+    - intros.
+        inversion H. subst.
+        inversion H7. subst.
+        rewrite restore_update.
+        apply E_Skip.
+    - intros.
+        inversion H. subst. 
+        rewrite <- (restore_update st' x (aeval st' a)).
+        apply E_New with
+            (n := aeval st' a)
+            (o := st' x)
+            (st' := (x !-> aeval st' a ; st')).
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. apply E_Skip.
+Qed.
+\end{lstlisting}
+La demostración comienza descomponiendo la doble implicación en dos direcciones. En cada una de ellas se aplica inversión sobre las derivaciones de evaluación, lo que permite identificar los constructores de la sintaxis abstracta y las reglas semánticas utilizadas para obtenerlas. Dichos constructores reflejan directamente las reglas de inferencia empleadas en la construcción del árbol de derivación correspondiente.
+
+Cabe destacar que, para completar la demostración, fue necesario probar un lema auxiliar sobre estados. Dicho lema establece que actualizar una variable con un valor arbitrario y posteriormente restaurar su valor original permite recuperar exactamente el estado previo. 
+
+Esta demostración ilustra cómo la semántica operacional resulta especialmente adecuada para razonar sobre estados mutables, ya que permite seguir de manera precisa los cambios producidos en el estado por cada construcción del lenguaje.
+
+%=======================
+\subsection{Semántica denotativa de \textsc{Comm}}
+
+En términos de semántica denotativa, la Proposición 1 se expresa formalmente como sigue.
+
+\begin{lema}
+Para todo identificador $x$ y toda expresión aritmética $a$, 
+\[
+\llbracket \mathtt{new}\ x:= a\ \mathtt{in}\ \mathtt{skip} \rrbracket
+=
+\llbracket \mathtt{skip} \rrbracket
+\]
+\end{lema}
+
+En \textsc{Rocq}, la equivalencia denotacional se formaliza mediante la siguiente definición.
+
+Dos comandos son equivalentes si, para todo estado, sus funciones semánticas producen el mismo estado resultante.
+
+\begin{lstlisting}[caption={Definición de equivalencia denotativa en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Definition equiv_denotativa (c1 c2 : com) : Prop :=  
+forall st,
+                  [[ c1 ]] st = [[ c2 ]] st.
+\end{lstlisting}
+
+
+La formalización del Lema 2 y su correspondiente demostración en \textsc{Rocq} se muestran a continuación.
+
+\begin{lstlisting}[caption={Programas equivalentes con semántica denotativa en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Example equiv_local_skip :
+  forall x a,
+  equiv_denotativa
+                  <{new x := a in skip }>
+                  <{skip}>.
+Proof.  
+intros x a st. 
+simpl. 
+unfold t_update. 
+apply functional_extensionality.
+intro x'.
+destruct (String.eqb x x') eqn:H.
+  - apply String.eqb_eq in H.
+    rewrite H. 
+    reflexivity.
+  - reflexivity.
+Qed.
+\end{lstlisting}
+
+
+La semántica denotativa permite capturar directamente el efecto global de un programa sin describir explícitamente cada paso de su ejecución. Como consecuencia, la demostración resulta considerablemente más sencilla que en el caso operacional.
+
+La definición de la función semántica traduce el objetivo de la prueba en una igualdad entre funciones de estado. Tras expandir las definiciones sintácticas y del entorno local, la prueba se apoya en el principio de extensionalidad funcional para evaluar el comportamiento de los estados ante cualquier identificador arbitrario. Esto permite que el resto de la demostración se resuelva mediante simplificación algebraica y análisis de casos, evitando por completo el manejo de relaciones inductivas.
+
+A diferencia de la semántica operacional, donde fue necesario analizar las reglas de evaluación y reconstruir derivaciones, en la semántica denotativa basta demostrar que ambos programas inducen la misma transformación sobre los estados.
+
+
+%===================================
+\subsection{Semántica axiomática de \textsc{Comm}}
+
+La Proposición 1, formulada en términos de equivalencia axiomática mediante la teoría de modelos, es la siguiente.
+
+\begin{lema}
+Para todo identificador $x$ y expresión aritmética $a$ , 
+\[
+\begin{gathered}
+\vDash \{P\}\ \mathtt{new }\ x := a\ \mathtt{in}\ \mathtt{skip}\ \{Q\}\\
+\Longleftrightarrow \\
+\vDash \{P\}\ \mathtt{skip}\ \{Q\} 
+\end{gathered}
+\]
+\end{lema}
+
+La equivalencia axiomática en \textsc{Rocq} se define como la equivalencia entre ternas de Hoare válidas bajo cualquier par de aserciones.
+
+\begin{lstlisting}[caption={Definición de equivalencia axiomática en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Definition equiv_axiomatica (c1 c2 : com) : Prop :=
+  forall P Q,
+                  {{P}} c1 {{Q}} <-> {{P}} c2 {{Q}}.
+\end{lstlisting}
+
+
+Dado que la validez de las ternas se fundamenta en un modelo de transiciones, el siguiente teorema demuestra que la equivalencia en semántica operacional, establecida por \lstinline|cequiv|, es un criterio suficiente para garantizar la equivalencia axiomática.
+
+\begin{lstlisting}[caption={Equivalencia bajo el modelo de estados para la semántica axiomática en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Lemma cequiv_valid_hoare :
+  forall c1 c2,
+  cequiv c1 c2 -> equiv_axiomatica c1 c2.
+Proof.
+  intros c1 c2 Heq P Q.
+  split.
+  - intros H st st' Hc HP.
+    apply H with (st := st) (st' := st').
+    + apply Heq.
+      exact Hc.
+    + exact HP.
+  - intros H st st' Hc HP.
+    apply H with (st := st) (st' := st').
+    + apply Heq.
+      exact Hc.
+    + exact HP.
+Qed.
+\end{lstlisting}
+
+Con este teorema, demostrar la equivalencia de dos programas bajo el enfoque axiomático se reduce a demostrar su equivalencia en el modelo de estados subyacente.
+
+\begin{lstlisting}[caption={Programas equivalentes con semántica axiomática en Rocq}, basicstyle=\footnotesize \rmfamily
+]
+Example equiv_local_skip : 
+    forall x a,
+    equiv_axiomatica
+                  <{ new x:=a in skip }>
+                  <{ skip }>.
+Proof.
+intros.
+apply cequiv_valid_hoare. 
+split.
+    - intros.
+      inversion H. subst.
+      inversion H7. subst.
+        rewrite restore_update.
+        apply E_Skip.
+    - intros.
+        inversion H. subst. 
+        rewrite <- (restore_update st' x (aeval st' a)).
+        apply E_New with
+            (n := aeval st' a)
+            (o := st' x)
+            (st' := (x !-> aeval st' a ; st')).
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. reflexivity.
+        + rewrite restore_update. apply E_Skip.
+Qed.
+\end{lstlisting}
+
+Se observa que la principal diferencia entre la demostración anterior respecto a la versión operacional  se centra en la aplicación  del teorema \lstinline| cequiv_valid_hoare|. 
+
+La semántica axiomática razona sobre el comportamiento del programa y las garantías que debe cumplir durante la ejecución pero demostrar equivalencia requiere razonar sobre las transiciones explícitas del modelo de estados. 

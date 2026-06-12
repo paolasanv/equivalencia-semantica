@@ -1,0 +1,28 @@
+Este tipo de semántica se interesa por describir qué efecto produce la ejecución de un programa \cite{nielson1992semantics}, abstrayendo los detalles de su evaluación e implementación mediante su representación en términos matemáticos. En lugar de explicar cómo se ejecuta un programa, se enfoca en caracterizar qué significa.
+
+La \enquote{semántica denotativa} de  un lenguaje $T$ está dada por \cite{hutton2023semantics}:
+\begin{itemize}
+    \item un dominio $V$ de valores semánticos, y
+    \item una función semántica 
+    \[
+        \llbracket \cdot \rrbracket : T \to V,
+    \]
+    que asigna a cada término $t \in T$ un valor semántico $\llbracket t \rrbracket \in V$.
+\end{itemize}
+La notación $\llbracket \cdot \rrbracket$, conocida como \emph{corchetes semánticos}, denota el resultado de interpretar un término dentro de un modelo matemático del lenguaje \cite{hutton2023semantics}.
+
+La idea es asignar a cada categoría sintáctica una función semántica que asocie cada construcción del lenguaje con un objeto matemático ---frecuentemente una función--- que describa su comportamiento. Este enfoque se basa en el principio de composicionalidad: el significado de una construcción compuesta se define únicamente en función del significado de sus subcomponentes \cite{nielson1992semantics}.
+
+La composicionalidad garantiza que términos denotacionalmente iguales pueden sustituirse dentro de cualquier construcción sin alterar su significado, lo que justifica el uso del razonamiento ecuacional \cite{hutton2023semantics}.  Asimismo, dado que la semántica denotacional se define por inducción estructural sobre la sintaxis, en la práctica es natural emplear inducción estructural para demostrar propiedades.  %pp 3-4
+
+A continuación, se presenta la equivalencia entre programas mediante una modelación matemática.
+
+\begin{definition}[Equivalencia en semántica denotativa]
+Dos programas $S_1$ y $S_2$ son semánticamente  equivalentes si y solo si 
+\[\llbracket S_1 \rrbracket  = \llbracket S_2 \rrbracket\]
+\end{definition}
+
+Esta definición de equivalencia reduce el problema a la igualdad matemática de los valores denotados. Es decir, dos programas son equivalentes cuando sus respectivas funciones semánticas lo son, lo que implica demostrar la \textit{extensionalidad} de las mismas. 
+
+Por lo tanto, aunque los programas posean estructuras sintácticas distintas o sigan estrategias de ejecución diferentes, ambos son indistinguibles desde el punto de vista denotacional si representan exactamente el mismo comportamiento abstracto.
+

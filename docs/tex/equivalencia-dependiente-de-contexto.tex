@@ -1,0 +1,114 @@
+%¿Qué significa que dos programas sean equivalentes y cómo cambia esta noción dependiendo del tipo de semántica utilizada?
+
+%Guía breve: Definan con cuidado qué puede entenderse por equivalencia de programas: mismo resultado, mismo comportamiento observable o misma interpretación matemática. Conviene comparar cómo cambia la respuesta según se use semántica operacional, denotativa u otra noción formal.
+
+
+\documentclass[journal]{IEEEtran}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\addto\captionsspanish{
+  \renewcommand{\abstractname}{Resumen}
+  \renewcommand{\IEEEkeywordsname}{Palabras clave}
+  \renewcommand{\refname}{Referencias}
+  \renewcommand{\figurename}{Figura}
+}
+\usepackage{csquotes}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage{url}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definición}
+\newtheorem{teorema}{Teorema}
+
+\newtheorem{proposicion}{Proposición}
+\newtheorem{lema}{Lema}
+
+\usepackage{listings}
+
+\definecolor{rocqOrange}{RGB}{255, 128, 0}  
+\definecolor{rocqGreen}{RGB}{0, 150, 0}   
+\definecolor{rocqPurple}{RGB}{128, 0, 128}  
+\definecolor{rocqBlue}{RGB}{0, 0, 255}      
+\definecolor{rocqComment}{RGB}{0, 128, 0}  
+
+\renewcommand{\lstlistingname}{Código}
+
+\lstdefinelanguage{Rocq}{
+  sensitive=true,
+  morecomment=[s]{(*}{*)},
+  morestring=[b]",
+  morekeywords=[1]{Definition, Fixpoint, Theorem, Lemma, Example, Inductive, Record},
+  morekeywords=[2]{Proof, Qed, Admitted, Save, Defined},
+  morekeywords=[3]{forall, exists, Prop, Type, fun},
+  morekeywords=[4]{ intros, apply, rewrite, intro, simpl, reflexivity, inversion, destruct, with, unfold, specialize, split, injection, exact, subst
+  }
+}
+
+\lstset{
+  language=Rocq,
+  basicstyle=\ttfamily\small,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{red},
+  keywordstyle=[1]\color{rocqOrange}\bfseries,
+  keywordstyle=[2]\color{rocqPurple}\bfseries,
+  keywordstyle=[3]\color{rocqGreen}\bfseries,
+  keywordstyle=[4]\color{rocqBlue},
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+  columns=flexible
+}
+
+\title{Equivalencia dependiente de contexto}
+
+
+\author{Hazel Torres Nava $^{1}$, Leslie Paola Sánchez Victoria$^{1}$ \\
+	\normalsize $^{1}$ Facultad de Ciencias UNAM, Ciudad de México, México \\
+	\normalsize e-mail: hazelt@ciencias.unam.mx, sanv.leslie@ciencias.unam.mx
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+En la teoría de lenguajes de programación, las semánticas proporcionan mecanismos formales para describir el significado de los programas más allá de su estructura sintáctica. Dependiendo del enfoque —operacional, denotativo o axiomático— se modelan distintos aspectos del comportamiento computacional, tales como la ejecución paso a paso, la interpretación matemática o las propiedades verificables del programa. En este contexto surge naturalmente la noción de equivalencia de programas: determinar bajo qué criterios dos programas pueden considerarse semánticamente indistinguibles.
+\end{abstract}
+
+\begin{IEEEkeywords}
+  equivalencia de programas, semántica axiomática, semántica denotativa, semántica operacional.
+\end{IEEEkeywords}
+
+%--- Seccion 1 ---
+\section{Introducción}
+\input{secciones/1-intro}
+
+%--- Seccion 2 ---
+\section{Equivalencia de programas}
+\label{sec:equivprogram}
+\input{secciones/2-equivalencia}
+
+
+%--- Seccion 3 ---
+\section{Distintas perspectivas}
+\input{secciones/3-equiv_dependiente}
+
+
+%---- Seccion 4 ----
+\section{Ejemplo}
+\input{secciones/4-ejemplo}
+
+%--- Seccion 5 ---
+\section{Conclusión \& Discusión}
+\input{secciones/5-conclusion_discusion}
+
+
+\nocite{*}
+\bibliographystyle{IEEEtran} 
+\bibliography{referencias}
+
+
+\end{document}
